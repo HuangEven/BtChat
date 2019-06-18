@@ -57,8 +57,7 @@ public class DevicesInRange extends Activity {
 	        filter = new IntentFilter(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
 	        this.registerReceiver(mReceiver, filter);
 	        
-	        // Get the local Bluetooth adapter
-	        
+
 	    }
 	    
 	    /*public void OnStart() {
@@ -90,19 +89,12 @@ public class DevicesInRange extends Activity {
 	    }
 	    
 	    /**
-	     * Start device discover with the BluetoothAdapter
+	     * 开始寻找蓝牙设备
 	     */
 	    private void doDiscovery() {
 	        if (D) Log.d(TAG, "doDiscovery()");
 
-	        // Indicate scanning in the title
-	        //setProgressBarIndeterminateVisibility(true);
-	        //setTitle(R.string.scanning);
 
-	        // Turn on sub-title for new devices
-	       // findViewById(R.id.title_new_devices).setVisibility(View.VISIBLE);
-
-	        // If we're already discovering, stop it
 	        if( mBtAdapter != null){
 	        if (mBtAdapter.isDiscovering()) {
 	            mBtAdapter.cancelDiscovery();
@@ -113,16 +105,15 @@ public class DevicesInRange extends Activity {
 	        if (D) Log.d(TAG, "startedDiscovery");
 	    }
 	    
-	    // The BroadcastReceiver that listens for discovered devices and
-	    // changes the title when discovery is finished
+	    // 广播监听
 	    private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
 	    	 @Override
 	         public void onReceive(Context context, Intent intent) {
 	    		 String action = intent.getAction();
 	    		 if (D) Log.d(TAG, "Listeningfordevices");
-	             // When discovery finds a device
+
 	             if (BluetoothDevice.ACTION_FOUND.equals(action)) {
-	                 // Get the BluetoothDevice object from the Intent
+	                 //获取蓝牙设备对象
 	            	 if (D) Log.d(TAG, "Hooray!!! Found a device");
 	                 BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
 	                 //Add to the list of all available devices
@@ -130,7 +121,6 @@ public class DevicesInRange extends Activity {
 	                 AllDevicesBundle.putString("Address"+count, device.getAddress());
 	                 count++;
 	                 
-	                 // If it's already paired, skip it, because it's been listed already
 	                 /*if (device.getBondState() != BluetoothDevice.BOND_BONDED) {
 	                     mNewDevicesArrayAdapter.add(device.getName() + "\n" + device.getAddress());
 	                 }*/

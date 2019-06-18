@@ -45,64 +45,62 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 /**
- * This is the main Activity that displays the current chat session.
+ * 显示当前会话的主活动
  */
 public class BluetoothChat extends Activity {
     // Debugging
     private static final String TAG = "BluetoothChat";
     private static final boolean D = true;
 
-    // Message types sent from the BluetoothChatService Handler
+    //BluetoothChatService Handler信息类型
     public static final int MESSAGE_STATE_CHANGE = 1;
     public static final int MESSAGE_READ = 2;
     public static final int MESSAGE_WRITE = 3;
     public static final int MESSAGE_DEVICE_NAME = 4;
     public static final int MESSAGE_TOAST = 5;
 
-    // Key names received from the BluetoothChatService Handler
+    //BluetoothChatService Handler关键名
     public static final String DEVICE_NAME = "device_name";
     public static final String TOAST = "toast";
 
-    // Intent request codes
+    //目标请求码
     private static final int REQUEST_CONNECT_DEVICE_SECURE = 1;
     private static final int REQUEST_CONNECT_DEVICE_INSECURE = 2;
     private static final int REQUEST_ENABLE_BT = 3;
     private static final int REQUEST_CONNECT_TO_ADDRESS = 4;
 
-    // Layout Views
+    //布局
     private ListView mConversationView;
     private EditText mOutEditText;
     private Button mSendButton;
 
-    // Name of the connected device
+    //连接设备的名字
     private String mConnectedDeviceName = null;
-    // Array adapter for the conversation thread
+    //通信进程适配器
     private ArrayAdapter<String> mConversationArrayAdapter;
-    // String buffer for outgoing messages
+    //缓存发送的消息
     private StringBuffer mOutStringBuffer;
-    // Local Bluetooth adapter
+    //本地蓝牙适配器
     private BluetoothAdapter mBluetoothAdapter = null;
-    // Member object for the chat services
+    //聊天服务的成员对象
     private BluetoothChatService mChatService = null;
     
 
     int flag = 0 ;
     
-    
-    //out.println("Hello from Generic console sample action");
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if(D) Log.e(TAG, "+++ ON CREATE +++");
 
-        // Set up the window layout
+        //设置界面布局
         setContentView(R.layout.main);
 
-        // Get local Bluetooth adapter
+        //获取本地蓝牙适配器
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         
-        // If the adapter is null, then Bluetooth is not supported
+        //蓝牙适配器未找到，不支持蓝牙
         if (mBluetoothAdapter == null) {
             Toast.makeText(this, "Bluetooth is not available", Toast.LENGTH_LONG).show();
             finish();
@@ -115,7 +113,7 @@ public class BluetoothChat extends Activity {
         super.onStart();
         if(D) Log.e(TAG, "++ ON START ++");
 
-        // If BT is not on, request that it be enabled.
+        //如果蓝牙未开启，请求不被接受
         // setupChat() will then be called during onActivityResult
         if (!mBluetoothAdapter.isEnabled()) {
             Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
@@ -131,13 +129,10 @@ public class BluetoothChat extends Activity {
         super.onResume();
         if(D) Log.e(TAG, "+ ON RESUME +");
 
-        // Performing this check in onResume() covers the case in which BT was
-        // not enabled during onStart(), so we were paused to enable it...
-        // onResume() will be called when ACTION_REQUEST_ENABLE activity returns.
+
         if (mChatService != null) {
-            // Only if the state is STATE_NONE, do we know that we haven't started already
             if (mChatService.getState() == BluetoothChatService.STATE_NONE) {
-              // Start the Bluetooth chat services
+              // 启动蓝牙聊天服务
               mChatService.start();
             }
         }
@@ -146,16 +141,16 @@ public class BluetoothChat extends Activity {
     private void setupChat() {
         Log.d(TAG, "setupChat()");
 
-        // Initialize the array adapter for the conversation thread
+        //初始化通信进程的所有适配器
         mConversationArrayAdapter = new ArrayAdapter<String>(this, R.layout.message);
         mConversationView = (ListView) findViewById(R.id.in);
         mConversationView.setAdapter(mConversationArrayAdapter);
 
-        // Initialize the compose field with a listener for the return key
+        //初始化监听
         mOutEditText = (EditText) findViewById(R.id.edit_text_out);
         mOutEditText.setOnEditorActionListener(mWriteListener);
 
-        // Initialize the send button with a listener that for click events
+        //初始化发送消息按钮
         mSendButton = (Button) findViewById(R.id.button_send);
         mSendButton.setOnClickListener(new OnClickListener() {
             public void onClick(View v) {
@@ -166,10 +161,10 @@ public class BluetoothChat extends Activity {
             }
         });
 
-        // Initialize the BluetoothChatService to perform bluetooth connections
+        //初始化BluetoothChatService新建蓝牙连接
         mChatService = new BluetoothChatService(this, mHandler);
 
-        // Initialize the buffer for outgoing messages
+        //初始化消息缓存
         mOutStringBuffer = new StringBuffer("");
     }
 
@@ -188,7 +183,7 @@ public class BluetoothChat extends Activity {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        // Stop the Bluetooth chat services
+        //终止蓝牙通信服务
         if (mChatService != null) mChatService.stop();
         if(D) Log.e(TAG, "--- ON DESTROY ---");
     }
@@ -208,25 +203,24 @@ public class BluetoothChat extends Activity {
      * @param message  A string of text to send.
      */
     private void sendMessage(String message) {
-        // Check that we're actually connected before trying anything
+        //确认连接成功
         if (mChatService.getState() != BluetoothChatService.STATE_CONNECTED) {
             Toast.makeText(this, R.string.not_connected, Toast.LENGTH_SHORT).show();
             return;
         }
 
-        // Check that there's actually something to send
+        //确认发送内容不为空
         if (message.length() > 0) {
-            // Get the message bytes and tell the BluetoothChatService to write
+            //获取消息字节流
             byte[] send = message.getBytes();
             mChatService.write(send);
 
-            // Reset out string buffer to zero and clear the edit text field
             mOutStringBuffer.setLength(0);
             mOutEditText.setText(mOutStringBuffer);
         }
     }
 
-    // The action listener for the EditText widget, to listen for the return key
+    //监听输入框
     private TextView.OnEditorActionListener mWriteListener =
         new TextView.OnEditorActionListener() {
         public boolean onEditorAction(TextView view, int actionId, KeyEvent event) {
@@ -250,7 +244,7 @@ public class BluetoothChat extends Activity {
         actionBar.setSubtitle(subTitle);
     }
 
-    // The Handler that gets information back from the BluetoothChatService
+    //处理器接收BluetoothChatService的服务
     private final Handler mHandler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
@@ -315,17 +309,15 @@ public class BluetoothChat extends Activity {
         case REQUEST_ENABLE_BT:
             // When the request to enable Bluetooth returns
             if (resultCode == Activity.RESULT_OK) {
-                // Bluetooth is now enabled, so set up a chat session
                 setupChat();
             } else {
-                // User did not enable Bluetooth or an error occurred
+                //用户不支持蓝牙或有错误发生
                 Log.d(TAG, "BT not enabled");
                 Toast.makeText(this, R.string.bt_not_enabled_leaving, Toast.LENGTH_SHORT).show();
                 finish();
             }
         case REQUEST_CONNECT_TO_ADDRESS:
-        	//When DeviceToConnect
-        	
+            //设备连接
         	int numberofDevicesinRange = data.getExtras().getInt("count");
         	int i;
         	String s [] = new String[100] ;
@@ -340,18 +332,18 @@ public class BluetoothChat extends Activity {
             textView.setTextSize(40);
             textView.setText(Arrays.toString(s));
 
-            // Set the text view as the activity layout
+            //设置文字编辑活动布局
             setContentView(textView);
         }
     }
 
     private void connectDevice(Intent data, boolean secure) {
-        // Get the device MAC address
+        //获取设备MAC address
         String address = data.getExtras()
             .getString(DeviceListActivity.EXTRA_DEVICE_ADDRESS);
-        // Get the BluetoothDevice object
+        //获取蓝牙设备对象
         BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(address);
-        // Attempt to connect to the device
+        //尝试连接
         mChatService.connect(device, secure);
     }
 
@@ -367,30 +359,26 @@ public class BluetoothChat extends Activity {
         Intent serverIntent = null;
         switch (item.getItemId()) {
         case R.id.secure_connect_scan:
-            // Launch the DeviceListActivity to see devices and do scan
             serverIntent = new Intent(this, DeviceListActivity.class);
             startActivityForResult(serverIntent, REQUEST_CONNECT_DEVICE_SECURE);
             return true;
         case R.id.insecure_connect_scan:
-            // Launch the DeviceListActivity to see devices and do scan
             serverIntent = new Intent(this, DeviceListActivity.class);
             startActivityForResult(serverIntent, REQUEST_CONNECT_DEVICE_INSECURE);
             return true;
         case R.id.discoverable:
-            // Ensure this device is discoverable by others
             ensureDiscoverable();
             return true;
         case R.id.connect_to_address:
         	AlertDialog.Builder alert = new AlertDialog.Builder(this);
         	Log.d("connect_to_address","enter address");
-        	alert.setTitle("Enter Address");
-        	//alert.setMessage("Message");
+        	alert.setTitle("输入好友地址");
 
-        	// Set an EditText view to get user input 
+           //获取文字输入
         	final EditText input = new EditText(this);
         	alert.setView(input);
 
-        	alert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+        	alert.setPositiveButton("确认", new DialogInterface.OnClickListener() {
         		public void onClick(DialogInterface dialog, int whichButton) {
         			String addr = input.getText().toString();
         			Log.d("connect_to_address","pressed OK");
@@ -404,7 +392,7 @@ public class BluetoothChat extends Activity {
         		}
         	});
 
-        	alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+        	alert.setNegativeButton("取消", new DialogInterface.OnClickListener() {
         		public void onClick(DialogInterface dialog, int whichButton) {
         	    // Canceled.
         		}
@@ -415,12 +403,7 @@ public class BluetoothChat extends Activity {
         	
         	System.out.println("flag = " + flag);
         	
-        	/*if(flag == 1)
-        	{
-        		Log.d("connect_to_address","pressed OK");
-        		serverIntent = new Intent(this, DevicesInRange.class);
-                startActivityForResult(serverIntent, REQUEST_CONNECT_TO_ADDRESS);
-        	}*/
+
         	return true;
 
         }
@@ -435,6 +418,4 @@ public class BluetoothChat extends Activity {
         startActivityForResult(serverIntent, REQUEST_CONNECT_TO_ADDRESS);
         
     }
-    
-
 }
